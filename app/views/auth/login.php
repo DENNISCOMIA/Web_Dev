@@ -22,7 +22,7 @@
             <h2 class="text-3xl font-bold mb-6 text-center text-gray-800 tracking-wide">LOG IN</h2>
 
             <?php if (!empty($message)) : ?>
-                <div class="bg-red-100 text-red-700 p-3 mb-4 rounded">
+                <div class="bg-green-100 text-green-700 p-3 mb-4 rounded">
                     <?= htmlspecialchars($message) ?>
                 </div>
             <?php endif; ?>

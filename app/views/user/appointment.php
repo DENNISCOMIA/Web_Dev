@@ -53,7 +53,7 @@ defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
       <?php endif; ?>
 
         <?php if(isset($message)): ?>
-           <div class="p-4 mb-4 text-red-800 bg-red-100 border border-red-300 rounded-lg">
+           <div class="max-w-4xl mx-auto mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"">
         <?= $message ?>
         </div>
         <?php endif; ?>
