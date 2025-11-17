@@ -60,11 +60,11 @@ defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
 
 $database['main'] = array(
     'driver'    => 'mysql',
-    'hostname'  => 'localhost',
+    'hostname'  => 'sql206.infinityfree.com',
     'port'      => '3306',
-    'username'  => 'root',
-    'password'  => '',
-    'database'  => 'eclinic_db',
+    'username'  => 'if0_40439121',
+    'password'  => 'rru42clsB0d4C',
+    'database'  => 'if0_40439121_eclinic_db',
     'charset'   => 'utf8mb4',
     'dbprefix'  => '',
     // Optional for SQLite
