@@ -79,7 +79,7 @@ class AuthController extends Controller
             ]);
 
             // Send OTP to email
-            require_once APP_DIR . 'libraries/mailer.php';
+            require_once APP_DIR . 'libraries/Mailer.php';
             $mail = new Mailer(true);
 
             try {
