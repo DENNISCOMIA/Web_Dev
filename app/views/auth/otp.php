@@ -17,7 +17,7 @@
             We sent a 6-digit code to <b><?= $email ?></b>
         </p>
 
-       <form method="POST" action="<?= base_url('auth/verify_otp') ?>" class="space-y-4">
+       <form method="POST" action="<?= site_url('auth/verify_otp') ?>" class="space-y-4">
         <input type="hidden" name="email" value="<?= $email ?>">
 
         <input 
@@ -29,7 +29,6 @@
         class="w-full px-4 py-3 border rounded-lg text-center text-xl tracking-widest
                focus:ring-2 focus:ring-green-500 focus:outline-none"
      />
- 
          <button 
               type="submit" 
              class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">
