@@ -256,5 +256,13 @@ public function records()
             }
         }
     }
+            public function printAllAppointments()
+        {
+            $appointments = $this->AppointmentModel->getAllAppointments();
+            $this->call->view('admin/appointments', [
+                'appointments' => $appointments,
+                'printMode' => true // flag for print mode in view
+            ]);
+        }
 }
 ?>
