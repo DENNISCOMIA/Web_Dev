@@ -264,5 +264,29 @@ public function records()
                 'printMode' => true // flag for print mode in view
             ]);
         }
+
+            public function accept($id)
+{
+    $this->db->where('id', $id);
+    $this->db->update('appointments', [
+        'status' => 'Accepted',
+        'notification' => 0  // send notification to user
+    ]);
+
+    $_SESSION['flash_success'] = "Appointment Accepted!";
+    redirect('admin/appointment_management');
+}
+
+public function cancel($id)
+{
+    $this->db->where('id', $id);
+    $this->db->update('appointments', [
+        'status' => 'Cancelled',
+        'notification' => 0  // send notification to user
+    ]);
+
+    $_SESSION['flash_error'] = "Appointment Cancelled!";
+    redirect('admin/appointment_management');
+}
 }
 ?>

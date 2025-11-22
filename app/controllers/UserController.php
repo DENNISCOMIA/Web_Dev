@@ -11,16 +11,13 @@ class UserController extends Controller
     {
         parent::__construct();
 
-        // ✅ Initialize LavaLust Database
         $this->call->library('database');
         $this->db = new Database();
 
-        // ✅ Load models
         $this->UserModel = new UserModel();
         $this->AppointmentModel = new AppointmentModel();
         $this->RecordModel = new RecordModel();
 
-        // ✅ Allow only logged-in users
         if (empty($_SESSION['logged_in']) || $_SESSION['role'] !== 'user') {
             redirect('auth/login');
             exit;
@@ -32,7 +29,26 @@ class UserController extends Controller
     // ============================
     public function home()
     {
-        $this->call->view('user/home');
+        $user_id = $_SESSION['user_id'];
+
+$sql = "
+    SELECT *
+    FROM appointments
+    WHERE user_id = ?
+      AND notification = 0
+      AND (status = 'Accepted' OR status = 'Cancelled')
+";
+
+$query = $this->db->raw($sql, [$user_id]);
+$notifications = $query->fetchAll();
+
+// Pass to view
+$this->call->view('user/home', [
+    'notifications' => $notifications
+]);
+
+
+
     }
 
     // ============================
@@ -73,7 +89,7 @@ class UserController extends Controller
     }
 
     // ============================
-    // 📅 USER APPOINTMENT (CREATE + VIEW)
+    // 📅 USER APPOINTMENT
     // ============================
     public function appointment()
     {
@@ -90,23 +106,23 @@ class UserController extends Controller
             $purpose          = trim($_POST['purpose']);
             $status           = 'Pending';
 
-             $pending = $this->db->table('appointments')
+            $pending = $this->db->table('appointments')
                     ->where('appointment_date', $appointment_date)
                     ->where('status', 'Pending')
                     ->get_all();
 
-    $pendingCount = $pending ? count($pending) : 0;
+            $pendingCount = $pending ? count($pending) : 0;
 
-    if ($pendingCount >= 5) {
-    $message = "❌ The selected date already has 5 pending appointments. Please pick another date.";
+            if ($pendingCount >= 5) {
+                $message = "❌ The selected date already has 5 pending appointments. Please pick another date.";
 
-    $this->call->view('user/appointment', [
-        'appointments' => $appointments,
-        'profile'      => $profile,
-        'message'      => $message
-    ]);
-    return;
-}
+                $this->call->view('user/appointment', [
+                    'appointments' => $appointments,
+                    'profile'      => $profile,
+                    'message'      => $message
+                ]);
+                return;
+            }
 
             $appointmentData = [
                 'user_id'          => $user_id,
@@ -115,7 +131,8 @@ class UserController extends Controller
                 'contact'          => $contact,
                 'appointment_date' => $appointment_date,
                 'status'           => $status,
-                'purpose'          => $purpose
+                'purpose'          => $purpose,
+                'notification'     => 0 // 🔔 NEW APPOINTMENT HAS NO NOTIFICATION
             ];
 
             $appointment_id = $this->AppointmentModel->createOrUpdateAppointment($appointmentData);
@@ -148,7 +165,7 @@ class UserController extends Controller
                     $message = "Appointment requested successfully!";
                 }
 
-                // ✅ Patient Records
+                // Patient records
                 $patientExists = $this->db->table('patient_records')
                                           ->where('user_id', $user_id)
                                           ->where('appointment_date', $appointment_date)
@@ -206,29 +223,36 @@ class UserController extends Controller
     // ============================
     // 🗑️ BULK DELETE HISTORY
     // ============================
-public function delete_history()
-{
-    // Only handle POST requests
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_ids'])) {
-        $ids = $_POST['delete_ids'];
+    public function delete_history()
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['delete_ids'])) {
+            $ids = array_map('intval', $_POST['delete_ids']);
 
-        // Convert all IDs to integers for safety
-        $ids = array_map('intval', $ids);
-
-        // ✅ Delete using LavaLust's query builder
-        foreach ($ids as $id) {
-            $this->db->table('user_history')->where('id', '=', $id)->delete();
+            foreach ($ids as $id) {
+                $this->db->table('user_history')->where('id', '=', $id)->delete();
+            }
         }
 
-        // Redirect back with success message
-        redirect('user/history');
-    } else {
-        // No IDs selected or invalid request
         redirect('user/history');
     }
-}
+
     // ============================
-    // 📩 CONTACT FORM (Mailer)
+    // 🔔 CLEAR NOTIFICATIONS
+    // ============================
+    public function clear_notifications()
+    {
+        $user_id = $_SESSION['user_id'];
+
+        $this->db->table('appointments')
+                 ->where('user_id', $user_id)
+                 ->where('notification', 0)
+                 ->update(['notification' => 1]);
+
+        echo "OK"; // AJAX response
+    }
+
+    // ============================
+    // 📩 CONTACT FORM
     // ============================
     public function send_message()
     {
@@ -242,40 +266,28 @@ public function delete_history()
             return;
         }
 
-        $adminEmail = 'denniscomia445@gmail.com'; // Admin Gmail
+        $adminEmail = 'denniscomia445@gmail.com';
 
-        // 1️⃣ Send the message to Admin
         $mail = new Mailer();
         $mail->addAddress($adminEmail, 'eClinic Admin');
         $mail->addReplyTo($email, $name);
         $mail->Subject = "📩 New Contact Message from $name";
-        $mail->Body = "You have received a new message from the eClinic Contact Form:\n\n"
-                    . "--------------------------------------\n"
-                    . "Name: $name\n"
-                    . "Email: $email\n"
-                    . "--------------------------------------\n\n"
-                    . "Message:\n$message\n\n"
-                    . "--------------------------------------\n"
-                    . "Please reply to this email to respond to the sender.";
+        $mail->Body = "You have received a new message:\n\n"
+                    . "Name: $name\nEmail: $email\n\nMessage:\n$message";
 
         $adminSent = $mail->send();
 
-        // 2️⃣ Send Auto-Reply to User
         if ($adminSent) {
             $reply = new Mailer();
             $reply->addAddress($email, $name);
             $reply->Subject = "✅ Thank you for contacting eClinic!";
-            $reply->Body = "Hi $name,\n\n"
-                        . "We’ve received your message:\n\n"
-                        . "\"$message\"\n\n"
-                        . "Our team will review your inquiry and respond soon.\n\n"
-                        . "Best regards,\nThe eClinic Team\n";
+            $reply->Body = "Hi $name,\n\nWe received your message:\n\n\"$message\"\n\nWe will reply soon.\n-eClinic Team";
 
             $reply->send();
 
-            $_SESSION['flash_success'] = '✅ Message sent successfully! We’ll reply soon.';
+            $_SESSION['flash_success'] = 'Message sent successfully!';
         } else {
-            $_SESSION['flash_error'] = '❌ Failed to send message. Please try again later.';
+            $_SESSION['flash_error'] = 'Failed to send message.';
         }
 
         redirect('user/home');

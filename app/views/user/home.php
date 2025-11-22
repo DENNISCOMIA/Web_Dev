@@ -37,6 +37,73 @@ defined('PREVENT_DIRECT_ACCESS') OR exit('No direct script access allowed');
     <!-- Main Content -->
     <main class="ml-80 flex-1 p-10">
 
+    <!-- ===========================
+     NOTIFICATION BELL
+============================== -->
+
+<div class="flex justify-end mb-6 relative">
+
+  <!-- Bell Icon -->
+  <button id="notifBtn" class="relative">
+    <span class="text-3xl cursor-pointer">🔔</span>
+
+    <!-- Red indicator -->
+    <?php if (!empty($notifications)): ?>
+      <span class="absolute top-0 right-0 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+        <?= count($notifications) ?>
+      </span>
+    <?php endif; ?>
+  </button>
+
+  <!-- DROPDOWN -->
+  <div id="notifMenu" class="hidden absolute right-0 mt-12 w-80 bg-white border border-gray-300 shadow-xl rounded-lg z-50">
+    
+    <div class="p-3 border-b font-semibold text-sky-500">
+      Notifications
+    </div>
+
+    <div class="max-h-60 overflow-y-auto">
+      <?php if (empty($notifications)): ?>
+        <p class="p-4 text-gray-500 text-center">No new notifications</p>
+      <?php else: ?>
+        <?php foreach ($notifications as $note): ?>
+          <div class="p-3 border-b hover:bg-gray-100">
+            <p class="font-semibold text-gray-700">
+              <?= $note['status'] ?>
+            </p>
+            <p class="text-sm text-gray-500">
+              Appointment on <?= date("F d, Y", strtotime($note['appointment_date'])) ?>
+            </p>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+
+    <?php if (!empty($notifications)): ?>
+      <button onclick="clearNotifications()" 
+        class="w-full bg-sky-500 text-white p-2 rounded-b-lg hover:bg-sky-600">
+        Clear All
+      </button>
+    <?php endif; ?>
+
+  </div>
+</div>
+
+<script>
+  // Toggle dropdown
+  document.getElementById("notifBtn").addEventListener("click", () => {
+    const menu = document.getElementById("notifMenu");
+    menu.classList.toggle("hidden");
+  });
+
+  // AJAX Clear Notifications
+  function clearNotifications() {
+    fetch("<?= site_url('user/clear_notifications') ?>")
+      .then(() => location.reload());
+  }
+</script>
+
+
 <!-- ✅ SESSION ALERTS -->
 <?php if (!empty($_SESSION['flash_success'])): ?>
   <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 text-center shadow-md">

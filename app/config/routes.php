@@ -55,9 +55,9 @@ $router->get('/user/home', 'UserController::home');
 $router->match('/user/profile', 'UserController::profile', ['GET', 'POST']);
 $router->match('/user/appointment', 'UserController::appointment', ['GET', 'POST']);
 $router->get('/user/history', 'UserController::history');
-
 $router->post('/user/send_message', 'UserController::send_message');
 $router->post('user/delete_history', 'UserController@delete_history');
+$router->get('/user/clear_notifications', 'UserController::clear_notifications');
 
 
 // ADMIN 
